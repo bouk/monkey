@@ -2,7 +2,7 @@
 
 This package implements actual arbitrary monkeypatching for Go. Yes really.
 
-## Example
+## Examples
 
 ```go
 package main
@@ -39,11 +39,22 @@ import (
 )
 
 func main() {
-	monkey.PatchInstanceMethod(reflect.TypeOf(http.DefaultClient), "send", func(_ *http.Client, _ *http.Request) (*http.Response, error) {
-		return nil, fmt.Errorf("no requests allowed")
+	var guard *monkey.PatchGuard
+	guard = monkey.PatchInstanceMethod(reflect.TypeOf(http.DefaultClient), "send", func(c *http.Client, req *http.Request) (*http.Response, error) {
+		guard.Unpatch()
+		defer guard.Restore()
+
+		if req.URL.Scheme == "http" {
+			return nil, fmt.Errorf("no http requests allowed")
+		}
+
+		return c.Do(req)
 	})
+
 	_, err := http.Get("http://google.com")
-	fmt.Println(err) // Get http://google.com: no requests allowed 
+	fmt.Println(err) // Get http://google.com: no http requests allowed
+	resp, err := http.Get("https://google.com")
+	fmt.Println(resp.Status, err) // 200 OK <nil>
 }
 ```
 
@@ -51,4 +62,4 @@ func main() {
 
 1. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
 2. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
-3. 
+3. Monkey is not threadsafe. Or any kind of safe

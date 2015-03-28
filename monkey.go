@@ -28,19 +28,39 @@ func getPtr(v reflect.Value) unsafe.Pointer {
 	return (*value)(unsafe.Pointer(&v)).ptr
 }
 
+type PatchGuard struct {
+	target      reflect.Value
+	replacement reflect.Value
+}
+
+func (g *PatchGuard) Unpatch() {
+	unpatchValue(g.target)
+}
+
+func (g *PatchGuard) Restore() {
+	patchValue(g.target, g.replacement)
+}
+
 // Patch replaces a function with another
-func Patch(target, replacement interface{}) {
-	patchValue(reflect.ValueOf(target), reflect.ValueOf(replacement))
+func Patch(target, replacement interface{}) *PatchGuard {
+	t := reflect.ValueOf(target)
+	r := reflect.ValueOf(replacement)
+	patchValue(t, r)
+
+	return &PatchGuard{t, r}
 }
 
 // PatchInstanceMethod replaces an instance method methodName for the type target with replacement
 // Replacement should expect the receiver (of type target) as the first argument
-func PatchInstanceMethod(target reflect.Type, methodName string, replacement interface{}) {
+func PatchInstanceMethod(target reflect.Type, methodName string, replacement interface{}) *PatchGuard {
 	m, ok := target.MethodByName(methodName)
 	if !ok {
 		panic(fmt.Sprintf("unkown method %s", methodName))
 	}
-	patchValue(m.Func, reflect.ValueOf(replacement))
+	r := reflect.ValueOf(replacement)
+	patchValue(m.Func, r)
+
+	return &PatchGuard{m.Func, r}
 }
 
 func patchValue(target, replacement reflect.Value) {

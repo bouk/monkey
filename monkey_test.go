@@ -35,6 +35,20 @@ func TestSimple(t *testing.T) {
 	assert.False(t, monkey.Unpatch(no))
 }
 
+func TestGuard(t *testing.T) {
+	var guard *monkey.PatchGuard
+	guard = monkey.Patch(no, func() bool {
+		guard.Unpatch()
+		defer guard.Restore()
+
+		return !no()
+	})
+	for i := 0; i < 100; i++ {
+		assert.True(t, no())
+	}
+	monkey.Unpatch(no)
+}
+
 func TestUnpatchAll(t *testing.T) {
 	assert.False(t, no())
 	monkey.Patch(no, yes)

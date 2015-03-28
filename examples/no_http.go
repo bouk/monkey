@@ -9,9 +9,20 @@ import (
 )
 
 func main() {
-	monkey.PatchInstanceMethod(reflect.TypeOf(http.DefaultClient), "send", func(_ *http.Client, _ *http.Request) (*http.Response, error) {
-		return nil, fmt.Errorf("no requests allowed")
+	var guard *monkey.PatchGuard
+	guard = monkey.PatchInstanceMethod(reflect.TypeOf(http.DefaultClient), "send", func(c *http.Client, req *http.Request) (*http.Response, error) {
+		guard.Unpatch()
+		defer guard.Restore()
+
+		if req.URL.Scheme == "http" {
+			return nil, fmt.Errorf("no http requests allowed")
+		}
+
+		return c.Do(req)
 	})
+
 	_, err := http.Get("http://google.com")
 	fmt.Println(err)
+	resp, err := http.Get("https://google.com")
+	fmt.Println(resp.Status, err)
 }

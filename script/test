@@ -1,2 +1,2 @@
 #!/bin/bash
-go test -gcflags=-l
+go test -v -gcflags=-l
