@@ -63,6 +63,7 @@ func main() {
 
 ## Notes
 
-1. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
-2. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
-3. Monkey is not threadsafe. Or any kind of safe
+1. If you want to call the original function you need to use a PatchGuard. Refer to the [godoc](https://godoc.org/github.com/bouk/monkey) for information on how to do that.
+2. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
+3. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
+4. Monkey is not threadsafe. Or any kind of safe
