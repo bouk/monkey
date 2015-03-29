@@ -1,8 +1,14 @@
-# Monkey, Go!
+# Go monkeypatching
 
-This package implements actual arbitrary monkeypatching for Go. Yes really.
+Actual arbitrary monkeypatching for Go. Yes really.
 
-## Examples
+## I thought that monkeypatching in Go is impossible?
+
+It's not possible through regular language constructs, but we can always bend computers to our will! Monkey implements monkeypatching by rewriting the running executable at runtime and inserting a jump to the function you want called instead. This is as unsafe as it sounds and I don't recommend anyone do it outside of a testing environment.
+
+## Using monkey
+
+Monkey's API is very simple and straightfoward. Call `monkey.Patch(<target function>, <replacement function>)` to replace a function. For example:
 
 ```go
 package main
@@ -27,7 +33,36 @@ func main() {
 }
 ```
 
-#### Example of instance method patching
+You can then call `monkey.Unpatch(<target function>)` to unpatch the method again. The replacement function can be an any function value, whether it's anonymous, bound or otherwise.
+
+If you want to patch an instance method you need to use `monkey.PatchInstanceMethod(<type>, <name>, <replacement>)`. You get the type by using `reflect.TypeOf`, and your replacement function simply takes the instance as the first argument. To disable all network connections, you can do as follows for example:
+
+```go
+package main
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"reflect"
+
+	"github.com/bouk/monkey"
+)
+
+func main() {
+	var d *net.Dialer // Has to be a pointer to because `Dial` has a pointer receiver
+	monkey.PatchInstanceMethod(reflect.TypeOf(d), "Dial", func(_ *net.Dialer, _, _ string) (net.Conn, error) {
+		return nil, fmt.Errorf("no dialing allowed")
+	})
+	_, err := http.Get("http://google.com")
+	fmt.Println(err) // Get http://google.com: no dialing allowed
+}
+
+```
+
+Note that patching the method for just one instance is currently not possible, `PatchInstanceMethod` will patch it for all instances. Don't bother trying `monkey.Patch(instance.Method, replacement)`, it won't work. `monkey.UnpatchInstanceMethod(<type>, <name>)` will undo `PatchInstanceMethod`.
+
+If you want to call the original function from within the replacement you need to use a `monkey.PatchGuard`. A patchguard allows you to easily remove and restore the patch so you can call the original function. For example:
 
 ```go
 package main
@@ -63,8 +98,7 @@ func main() {
 
 ## Notes
 
-1. If you want to call the original function you need to use a PatchGuard. Refer to the [godoc](https://godoc.org/github.com/bouk/monkey) for information on how to do that.
-2. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
-3. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
-4. Monkey is not threadsafe. Or any kind of safe
-5. I've tested monkey on OSX 10.10.2 and Ubuntu 14.04. It should work on any unix-based 64-bits system.
+1. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
+2. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
+3. Monkey is not threadsafe. Or any kind of safe
+4. I've tested monkey on OSX 10.10.2 and Ubuntu 14.04. It should work on any unix-based 64-bits system.
