@@ -6,6 +6,7 @@ import (
 
 // this function is super unsafe
 // aww yeah
+// It copies a slice to a raw memory location, disabling all memory protection before doing so.
 func copyToLocation(location uintptr, data []byte) {
 	f := rawMemoryAccess(location, len(data))
 

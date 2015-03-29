@@ -62,6 +62,8 @@ func main() {
 
 Note that patching the method for just one instance is currently not possible, `PatchInstanceMethod` will patch it for all instances. Don't bother trying `monkey.Patch(instance.Method, replacement)`, it won't work. `monkey.UnpatchInstanceMethod(<type>, <name>)` will undo `PatchInstanceMethod`.
 
+If you want to remove all currently applied monkeypatches simply call `monkey.UnpatchAll`. This could be useful in a test teardown function.
+
 If you want to call the original function from within the replacement you need to use a `monkey.PatchGuard`. A patchguard allows you to easily remove and restore the patch so you can call the original function. For example:
 
 ```go

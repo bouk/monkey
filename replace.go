@@ -18,6 +18,8 @@ func pageStart(ptr uintptr) uintptr {
 	return ptr & ^(uintptr(syscall.Getpagesize() - 1))
 }
 
+// from is a pointer to the actual function
+// to is a pointer to a go funcvalue
 func replaceFunction(from, to uintptr) (original []byte) {
 	jumpData := jmpToFunctionValue(to)
 	f := rawMemoryAccess(from, len(jumpData))
