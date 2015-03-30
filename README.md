@@ -6,6 +6,8 @@ Actual arbitrary monkeypatching for Go. Yes really.
 
 It's not possible through regular language constructs, but we can always bend computers to our will! Monkey implements monkeypatching by rewriting the running executable at runtime and inserting a jump to the function you want called instead. This is as unsafe as it sounds and I don't recommend anyone do it outside of a testing environment.
 
+Make sure you read the notes at the bottom of the README if you intend to use this library.
+
 ## Using monkey
 
 Monkey's API is very simple and straightfoward. Call `monkey.Patch(<target function>, <replacement function>)` to replace a function. For example:
@@ -33,7 +35,7 @@ func main() {
 }
 ```
 
-You can then call `monkey.Unpatch(<target function>)` to unpatch the method again. The replacement function can be an any function value, whether it's anonymous, bound or otherwise.
+You can then call `monkey.Unpatch(<target function>)` to unpatch the method again. The replacement function can be any function value, whether it's anonymous, bound or otherwise.
 
 If you want to patch an instance method you need to use `monkey.PatchInstanceMethod(<type>, <name>, <replacement>)`. You get the type by using `reflect.TypeOf`, and your replacement function simply takes the instance as the first argument. To disable all network connections, you can do as follows for example:
 
@@ -102,5 +104,5 @@ func main() {
 
 1. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
 2. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
-3. Monkey is not threadsafe. Or any kind of safe
+3. Monkey is not threadsafe. Or any kind of safe.
 4. I've tested monkey on OSX 10.10.2 and Ubuntu 14.04. It should work on any unix-based x86 or x86-64 system.
