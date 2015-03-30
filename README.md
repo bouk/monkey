@@ -1,4 +1,4 @@
-# Go monkeypatching
+# Go monkeypatching :monkey_face: :monkey:
 
 Actual arbitrary monkeypatching for Go. Yes really.
 
