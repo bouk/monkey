@@ -26,6 +26,6 @@ func replaceFunction(from, to uintptr) (original []byte) {
 	original = make([]byte, len(f))
 	copy(original, f)
 
-	copyToLocation(from, jumpData[:])
+	copyToLocation(from, jumpData)
 	return
 }

@@ -1,8 +1,8 @@
 package monkey
 
 // Assembles a jump to a function value
-func jmpToFunctionValue(to uintptr) [12]byte {
-	return [12]byte{
+func jmpToFunctionValue(to uintptr) []byte {
+	return []byte{
 		0x48, 0xBA,
 		byte(to),
 		byte(to >> 8),
