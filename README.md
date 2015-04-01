@@ -85,8 +85,8 @@ import (
 func main() {
 	var guard *monkey.PatchGuard
 	guard = monkey.PatchInstanceMethod(reflect.TypeOf(http.DefaultClient), "Get", func(c *http.Client, url string) (*http.Response, error) {
-		guard.Unpatch()
-		defer guard.Restore()
+		defer guard.Unpatch()
+		guard.Restore()
 
 		if !strings.HasPrefix(url, "https://") {
 			return nil, fmt.Errorf("only https requests allowed")
