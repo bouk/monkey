@@ -17,6 +17,7 @@ var (
 	lock = sync.Mutex{}
 
 	patches = make(map[reflect.Value]patch)
+	values  = make(map[reflect.Value]*reflect.Value)
 )
 
 type value struct {
@@ -85,6 +86,7 @@ func patchValue(target, replacement reflect.Value) {
 
 	bytes := replaceFunction(*(*uintptr)(getPtr(target)), uintptr(getPtr(replacement)))
 	patches[target] = patch{bytes}
+	values[target] = &replacement // To prevent GC from causing a crash
 }
 
 // Unpatch removes any monkey patches on target
