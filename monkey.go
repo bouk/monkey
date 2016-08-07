@@ -11,6 +11,7 @@ import (
 // needed to undo a patch
 type patch struct {
 	originalBytes []byte
+	replacement   *reflect.Value
 }
 
 var (
@@ -84,7 +85,7 @@ func patchValue(target, replacement reflect.Value) {
 	}
 
 	bytes := replaceFunction(*(*uintptr)(getPtr(target)), uintptr(getPtr(replacement)))
-	patches[target] = patch{bytes}
+	patches[target] = patch{bytes, &replacement}
 }
 
 // Unpatch removes any monkey patches on target
