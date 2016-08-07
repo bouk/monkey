@@ -2,6 +2,7 @@ package monkey_test
 
 import (
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 
@@ -24,6 +25,16 @@ func TestTimePatch(t *testing.T) {
 	assert.Equal(t, time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC), during)
 	assert.NotEqual(t, before, during)
 	assert.NotEqual(t, during, after)
+}
+
+func TestGC(t *testing.T) {
+	value := true
+	monkey.Patch(no, func() bool {
+		return value
+	})
+	defer monkey.UnpatchAll()
+	runtime.GC()
+	assert.True(t, no())
 }
 
 func TestSimple(t *testing.T) {
