@@ -56,7 +56,7 @@ func Patch(target, replacement interface{}) *PatchGuard {
 func PatchInstanceMethod(target reflect.Type, methodName string, replacement interface{}) *PatchGuard {
 	m, ok := target.MethodByName(methodName)
 	if !ok {
-		panic(fmt.Sprintf("unkown method %s", methodName))
+		panic(fmt.Sprintf("unknown method %s", methodName))
 	}
 	r := reflect.ValueOf(replacement)
 	patchValue(m.Func, r)
@@ -99,7 +99,7 @@ func Unpatch(target interface{}) bool {
 func UnpatchInstanceMethod(target reflect.Type, methodName string) bool {
 	m, ok := target.MethodByName(methodName)
 	if !ok {
-		panic(fmt.Sprintf("unkown method %s", methodName))
+		panic(fmt.Sprintf("unknown method %s", methodName))
 	}
 	return unpatchValue(m.Func)
 }
