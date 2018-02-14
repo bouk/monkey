@@ -6,7 +6,7 @@ Read this blogpost for an explanation on how it works: http://bouk.co/blog/monke
 
 ## I thought that monkeypatching in Go is impossible?
 
-It's not possible through regular language constructs, but we can always bend computers to our will! Monkey implements monkeypatching by rewriting the running executable at runtime and inserting a jump to the function you want called instead. This is as unsafe as it sounds and I don't recommend anyone do it outside of a testing environment.
+It's not possible through regular language constructs, but we can always bend computers to our will! Monkey implements monkeypatching by rewriting the running executable at runtime and inserting a jump to the function you want called instead. **This is as unsafe as it sounds and I don't recommend anyone do it outside of a testing environment.**
 
 Make sure you read the notes at the bottom of the README if you intend to use this library.
 
