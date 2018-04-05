@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bouk/monkey"
+  "."
 	"github.com/stretchr/testify/assert"
 )
 
@@ -84,15 +84,36 @@ func TestWithInstanceMethod(t *testing.T) {
 
 type f struct{}
 
-func (f *f) no() bool { return false }
+func (f *f) No() bool { return false }
+func (f *f) Yes() bool { return true }
 
 func TestOnInstanceMethod(t *testing.T) {
 	i := &f{}
-	assert.False(t, i.no())
-	monkey.PatchInstanceMethod(reflect.TypeOf(i), "no", func(_ *f) bool { return true })
-	assert.True(t, i.no())
-	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "no"))
-	assert.False(t, i.no())
+  
+	assert.True(t, i.Yes())
+	assert.False(t, i.No())
+	monkey.PatchInstanceMethod(reflect.TypeOf(i), "No", func(*f) bool { return true })
+	assert.True(t, i.Yes())
+	assert.True(t, i.No())
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "No"))
+	assert.True(t, i.Yes())
+	assert.False(t, i.No())
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(i), "Yes", func(*f) bool { return false })
+	assert.False(t, i.Yes())
+	assert.False(t, i.No())
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "Yes"))
+	assert.True(t, i.Yes())
+	assert.False(t, i.No())
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(i), "Yes", func(*f) bool { return false })
+	monkey.PatchInstanceMethod(reflect.TypeOf(i), "No", func(*f) bool { return true })
+	assert.False(t, i.Yes())
+	assert.True(t, i.No())
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "Yes"))
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "No"))
+	assert.True(t, i.Yes())
+	assert.False(t, i.No())
 }
 
 func TestNotFunction(t *testing.T) {

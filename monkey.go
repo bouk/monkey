@@ -11,13 +11,14 @@ import (
 // needed to undo a patch
 type patch struct {
 	originalBytes []byte
+  original *reflect.Value
 	replacement   *reflect.Value
 }
 
 var (
 	lock = sync.Mutex{}
 
-	patches = make(map[reflect.Value]patch)
+	patches = make(map[uintptr]patch)
 )
 
 type value struct {
@@ -80,12 +81,12 @@ func patchValue(target, replacement reflect.Value) {
 		panic(fmt.Sprintf("target and replacement have to have the same type %s != %s", target.Type(), replacement.Type()))
 	}
 
-	if patch, ok := patches[target]; ok {
+	if patch, ok := patches[target.Pointer()]; ok {
 		unpatch(target, patch)
 	}
 
 	bytes := replaceFunction(*(*uintptr)(getPtr(target)), uintptr(getPtr(replacement)))
-	patches[target] = patch{bytes, &replacement}
+	patches[target.Pointer()] = patch{bytes, &replacement, &target}
 }
 
 // Unpatch removes any monkey patches on target
@@ -109,7 +110,7 @@ func UnpatchAll() {
 	lock.Lock()
 	defer lock.Unlock()
 	for target, p := range patches {
-		unpatch(target, p)
+		unpatch(*p.original, p)
 		delete(patches, target)
 	}
 }
@@ -119,12 +120,12 @@ func UnpatchAll() {
 func unpatchValue(target reflect.Value) bool {
 	lock.Lock()
 	defer lock.Unlock()
-	patch, ok := patches[target]
+	patch, ok := patches[target.Pointer()]
 	if !ok {
 		return false
 	}
 	unpatch(target, patch)
-	delete(patches, target)
+	delete(patches, target.Pointer())
 	return true
 }
 
