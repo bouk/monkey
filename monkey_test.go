@@ -95,6 +95,33 @@ func TestOnInstanceMethod(t *testing.T) {
 	assert.False(t, i.no())
 }
 
+func TestOnInstanceMethodFlexibleWithInputParameters(t *testing.T) {
+	i := &f{}
+	assert.False(t, i.no())
+	monkey.PatchInstanceMethodFlexible(reflect.TypeOf(i), "no", func(_ interface{}) bool { return true })
+	assert.True(t, i.no())
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "no"))
+	assert.False(t, i.no())
+}
+
+func TestOnInstanceMethodFlexibleWithoutInputParameters(t *testing.T) {
+	i := &f{}
+	assert.False(t, i.no())
+	monkey.PatchInstanceMethodFlexible(reflect.TypeOf(i), "no", func() bool { return true })
+	assert.True(t, i.no())
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "no"))
+	assert.False(t, i.no())
+}
+
+func TestOnInstanceMethodFlexibleNotCompatibleTooManyParameters(t *testing.T) {
+	i := &f{}
+	assert.False(t, i.no())
+	assert.Panics(t, func() {
+		// replacement has to many arguments
+		monkey.PatchInstanceMethodFlexible(reflect.TypeOf(i), "no", func(_ interface{}, _ interface{}) bool { return true })
+	})
+}
+
 func TestNotFunction(t *testing.T) {
 	assert.Panics(t, func() {
 		monkey.Patch(no, 1)
