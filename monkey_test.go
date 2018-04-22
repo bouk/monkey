@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-  "."
+	"github.com/bouk/monkey"
 	"github.com/stretchr/testify/assert"
 )
 
