@@ -2,7 +2,7 @@
 
 Actual arbitrary monkeypatching for Go. Yes really.
 
-Read this blogpost for an explanation on how it works: http://bouk.co/blog/monkey-patching-in-go/
+Read this blogpost for an explanation on how it works: https://bou.ke/blog/monkey-patching-in-go/
 
 ## I thought that monkeypatching in Go is impossible?
 
