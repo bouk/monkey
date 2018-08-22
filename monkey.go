@@ -64,6 +64,31 @@ func PatchInstanceMethod(target reflect.Type, methodName string, replacement int
 	return &PatchGuard{m.Func, r}
 }
 
+func PatchInstanceMethodFlexible(target reflect.Type, methodName string, replacement interface{}) *PatchGuard {
+	m, ok := target.MethodByName(methodName)
+	if !ok {
+		panic(fmt.Sprintf("unknown method %s", methodName))
+	}
+
+	replacementInputLen := reflect.TypeOf(replacement).NumIn()
+	if replacementInputLen > m.Type.NumIn() {
+		panic(fmt.Sprintf("replacement functoin has too many input parameters: %d, replaced function: %d", replacementInputLen, m.Type.NumIn()))
+	}
+
+	replacementWrapper := reflect.MakeFunc(m.Type, func(args []reflect.Value) []reflect.Value {
+		inputsForReplacement := make([]reflect.Value, 0, replacementInputLen)
+		for i := 0; i < cap(inputsForReplacement); i++ {
+			elem := args[i].Convert(reflect.TypeOf(replacement).In(i))
+			inputsForReplacement = append(inputsForReplacement, elem)
+		}
+
+		return reflect.ValueOf(replacement).Call(inputsForReplacement)
+	})
+
+	patchValue(m.Func, replacementWrapper)
+	return &PatchGuard{m.Func, replacementWrapper}
+}
+
 func patchValue(target, replacement reflect.Value) {
 	lock.Lock()
 	defer lock.Unlock()

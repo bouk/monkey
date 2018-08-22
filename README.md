@@ -66,6 +66,25 @@ func main() {
 
 Note that patching the method for just one instance is currently not possible, `PatchInstanceMethod` will patch it for all instances. Don't bother trying `monkey.Patch(instance.Method, replacement)`, it won't work. `monkey.UnpatchInstanceMethod(<type>, <name>)` will undo `PatchInstanceMethod`.
 
+If you want to patch an instance method without support input parameters (useful when we interested only in return value or when we don't have access to the private receiver type) you can use  `PatchInstanceMethodFlexible`, for example previous example could be rewritten as:
+```go
+    monkey.PatchInstanceMethodFlexible(reflect.TypeOf(d), "Dial", func( /*NO INPUT PARAMETERS*/) (net.Conn, error) {
+        ...
+    })
+```
+or if we are interested in some input parameter
+```
+    monkey.PatchInstanceMethodFlexible(reflect.TypeOf(d), "Dial", func(_, _ interface{}, a string) (net.Conn, error) {
+        // can use "a"
+    })
+
+    same:
+
+    monkey.PatchInstanceMethodFlexible(reflect.TypeOf(d), "Dial", func(_, _, a interface{}) (net.Conn, error) {
+        // can use "a.(string)"
+    })
+```
+
 If you want to remove all currently applied monkeypatches simply call `monkey.UnpatchAll`. This could be useful in a test teardown function.
 
 If you want to call the original function from within the replacement you need to use a `monkey.PatchGuard`. A patchguard allows you to easily remove and restore the patch so you can call the original function. For example:
