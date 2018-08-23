@@ -64,6 +64,29 @@ func PatchInstanceMethod(target reflect.Type, methodName string, replacement int
 	return &PatchGuard{m.Func, r}
 }
 
+func PatchReturning(target interface{}, results ...interface{}) *PatchGuard {
+	f := funcReturning(reflect.TypeOf(target), results...)
+	return Patch(target, f.Interface())
+}
+
+func funcReturning(funcType reflect.Type, results ...interface{}) reflect.Value {
+	var resultValues []reflect.Value
+	for i, r := range results {
+		var retValue reflect.Value
+		if r == nil {
+			retValue = reflect.Zero(funcType.Out(i))
+		} else {
+			tempV := reflect.New(funcType.Out(i))
+			tempV.Elem().Set(reflect.ValueOf(r))
+			retValue = tempV.Elem()
+		}
+		resultValues = append(resultValues, retValue)
+	}
+	return reflect.MakeFunc(funcType, func(_ []reflect.Value) []reflect.Value {
+		return resultValues
+	})
+}
+
 func patchValue(target, replacement reflect.Value) {
 	lock.Lock()
 	defer lock.Unlock()
