@@ -11,7 +11,7 @@ import (
 // needed to undo a patch
 type patch struct {
 	originalBytes []byte
-  original *reflect.Value
+	original      *reflect.Value
 	replacement   *reflect.Value
 }
 

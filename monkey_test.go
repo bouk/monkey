@@ -84,12 +84,12 @@ func TestWithInstanceMethod(t *testing.T) {
 
 type f struct{}
 
-func (f *f) No() bool { return false }
+func (f *f) No() bool  { return false }
 func (f *f) Yes() bool { return true }
 
 func TestOnInstanceMethod(t *testing.T) {
 	i := &f{}
-  
+
 	assert.True(t, i.Yes())
 	assert.False(t, i.No())
 	monkey.PatchInstanceMethod(reflect.TypeOf(i), "No", func(*f) bool { return true })
