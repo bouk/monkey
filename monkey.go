@@ -17,7 +17,7 @@ type patch struct {
 var (
 	lock = sync.Mutex{}
 
-	patches = make(map[reflect.Value]patch)
+	patches = make(map[uintptr]patch)
 )
 
 type value struct {
@@ -27,6 +27,10 @@ type value struct {
 
 func getPtr(v reflect.Value) unsafe.Pointer {
 	return (*value)(unsafe.Pointer(&v)).ptr
+}
+
+func getPtrValue(v reflect.Value) uintptr {
+	return *(*uintptr)(getPtr(v))
 }
 
 type PatchGuard struct {
@@ -80,12 +84,13 @@ func patchValue(target, replacement reflect.Value) {
 		panic(fmt.Sprintf("target and replacement have to have the same type %s != %s", target.Type(), replacement.Type()))
 	}
 
-	if patch, ok := patches[target]; ok {
-		unpatch(target, patch)
+	funcPtr := getPtrValue(target)
+	if patch, ok := patches[funcPtr]; ok {
+		copyToLocation(funcPtr, patch.originalBytes)
 	}
 
-	bytes := replaceFunction(*(*uintptr)(getPtr(target)), uintptr(getPtr(replacement)))
-	patches[target] = patch{bytes, &replacement}
+	bytes := replaceFunction(funcPtr, uintptr(getPtr(replacement)))
+	patches[funcPtr] = patch{bytes, &replacement}
 }
 
 // Unpatch removes any monkey patches on target
@@ -108,9 +113,9 @@ func UnpatchInstanceMethod(target reflect.Type, methodName string) bool {
 func UnpatchAll() {
 	lock.Lock()
 	defer lock.Unlock()
-	for target, p := range patches {
-		unpatch(target, p)
-		delete(patches, target)
+	for funcPtr, p := range patches {
+		copyToLocation(funcPtr, p.originalBytes)
+		delete(patches, funcPtr)
 	}
 }
 
@@ -119,15 +124,12 @@ func UnpatchAll() {
 func unpatchValue(target reflect.Value) bool {
 	lock.Lock()
 	defer lock.Unlock()
-	patch, ok := patches[target]
+	funcPtr := getPtrValue(target)
+	patch, ok := patches[funcPtr]
 	if !ok {
 		return false
 	}
-	unpatch(target, patch)
-	delete(patches, target)
+	copyToLocation(funcPtr, patch.originalBytes)
+	delete(patches, funcPtr)
 	return true
-}
-
-func unpatch(target reflect.Value, p patch) {
-	copyToLocation(*(*uintptr)(getPtr(target)), p.originalBytes)
 }
