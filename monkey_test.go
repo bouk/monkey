@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"../monkey"
+	"."
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,7 +51,6 @@ func TestGuard(t *testing.T) {
 	guard = monkey.Patch(no, func() bool {
 		guard.Unpatch()
 		defer guard.Restore()
-
 		return !no()
 	})
 	for i := 0; i < 100; i++ {

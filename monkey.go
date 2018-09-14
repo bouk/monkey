@@ -29,10 +29,6 @@ func getPtr(v reflect.Value) unsafe.Pointer {
 	return (*value)(unsafe.Pointer(&v)).ptr
 }
 
-func getPtrValue(v reflect.Value) uintptr {
-	return *(*uintptr)(getPtr(v))
-}
-
 type PatchGuard struct {
 	target      reflect.Value
 	replacement reflect.Value
@@ -84,13 +80,12 @@ func patchValue(target, replacement reflect.Value) {
 		panic(fmt.Sprintf("target and replacement have to have the same type %s != %s", target.Type(), replacement.Type()))
 	}
 
-	funcPtr := getPtrValue(target)
-	if patch, ok := patches[funcPtr]; ok {
-		copyToLocation(funcPtr, patch.originalBytes)
+	if patch, ok := patches[target.Pointer()]; ok {
+		unpatch(target.Pointer(), patch)
 	}
 
-	bytes := replaceFunction(funcPtr, uintptr(getPtr(replacement)))
-	patches[funcPtr] = patch{bytes, &replacement}
+	bytes := replaceFunction(target.Pointer(), (uintptr)(getPtr(replacement)))
+	patches[target.Pointer()] = patch{bytes, &replacement}
 }
 
 // Unpatch removes any monkey patches on target
@@ -113,9 +108,9 @@ func UnpatchInstanceMethod(target reflect.Type, methodName string) bool {
 func UnpatchAll() {
 	lock.Lock()
 	defer lock.Unlock()
-	for funcPtr, p := range patches {
-		copyToLocation(funcPtr, p.originalBytes)
-		delete(patches, funcPtr)
+	for target, p := range patches {
+		unpatch(target, p)
+		delete(patches, target)
 	}
 }
 
@@ -124,12 +119,15 @@ func UnpatchAll() {
 func unpatchValue(target reflect.Value) bool {
 	lock.Lock()
 	defer lock.Unlock()
-	funcPtr := getPtrValue(target)
-	patch, ok := patches[funcPtr]
+	patch, ok := patches[target.Pointer()]
 	if !ok {
 		return false
 	}
-	copyToLocation(funcPtr, patch.originalBytes)
-	delete(patches, funcPtr)
+	unpatch(target.Pointer(), patch)
+	delete(patches, target.Pointer())
 	return true
+}
+
+func unpatch(target uintptr, p patch) {
+	copyToLocation(target, p.originalBytes)
 }
