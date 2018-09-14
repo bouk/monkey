@@ -51,7 +51,6 @@ func TestGuard(t *testing.T) {
 	guard = monkey.Patch(no, func() bool {
 		guard.Unpatch()
 		defer guard.Restore()
-
 		return !no()
 	})
 	for i := 0; i < 100; i++ {
@@ -84,15 +83,15 @@ func TestWithInstanceMethod(t *testing.T) {
 
 type f struct{}
 
-func (f *f) no() bool { return false }
+func (f *f) No() bool { return false }
 
 func TestOnInstanceMethod(t *testing.T) {
 	i := &f{}
-	assert.False(t, i.no())
-	monkey.PatchInstanceMethod(reflect.TypeOf(i), "no", func(_ *f) bool { return true })
-	assert.True(t, i.no())
-	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "no"))
-	assert.False(t, i.no())
+	assert.False(t, i.No())
+	monkey.PatchInstanceMethod(reflect.TypeOf(i), "No", func(_ *f) bool { return true })
+	assert.True(t, i.No())
+	assert.True(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), "No"))
+	assert.False(t, i.No())
 }
 
 func TestNotFunction(t *testing.T) {
