@@ -6,10 +6,10 @@ import (
 	"syscall"
 )
 
-func mprotectCrossPage(addr uintptr, len int, prot int) {
+func mprotectCrossPage(addr uintptr, length int, prot int) {
 	pageSize := syscall.Getpagesize()
-	for p := pageStart(addr); p <= addr + uintptr(len); p += uintptr(pageSize) {
-		page := rawMemoryAccess(p, syscall.Getpagesize())
+	for p := pageStart(addr); p <= addr + uintptr(length); p += uintptr(pageSize) {
+		page := rawMemoryAccess(p, pageSize)
 		err := syscall.Mprotect(page, prot)
 		if err != nil {
 			panic(err)
